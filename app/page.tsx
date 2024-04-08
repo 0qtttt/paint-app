@@ -117,6 +117,39 @@ function App() {
     setSelectedShape(null);
   };
 
+  // 도형 앞으로, 뒤로 이동 기능
+  const handleItem = (direction: number) => {
+    if (!selectedShape) return;
+    const currentIndex = shapes.findIndex((item) => item.id === selectedShape.id);
+    const newIndex = currentIndex + direction;
+    if (newIndex < 0 || newIndex >= shapes.length) return;
+
+    const newItems = [...shapes];
+    const currentItem = newItems[currentIndex];
+    newItems.splice(currentIndex, 1);
+    newItems.splice(newIndex, 0, currentItem);
+
+    setShapes(newItems);
+  };
+
+  // 도형 맨앞으로 기능
+  const handleTop = () => {
+    if (!selectedShape) return;
+    const filteredItems = shapes.filter((d) => d.id !== selectedShape.id);
+    const itemToMove = shapes.find((d) => d.id === selectedShape.id);
+    if (!itemToMove) return;
+    setShapes([...filteredItems, itemToMove]);
+  };
+
+  // 도형 맨뒤로 기능
+  const handleLast = () => {
+    if (!selectedShape) return;
+    const filteredItems = shapes.filter((d) => d.id !== selectedShape.id);
+    const itemToMove = shapes.find((d) => d.id === selectedShape.id);
+    if (!itemToMove) return;
+    setShapes([itemToMove, ...filteredItems]);
+  };
+
   return (
     <div
       style={{
@@ -135,6 +168,12 @@ function App() {
         </button>
         <button onClick={handleDelete}>선택 삭제</button>
         <button onClick={clearCanvas}>캔버스 지우기</button>
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={() => handleItem(1)}>앞으로 가져오기</button>
+        <button onClick={() => handleItem(-1)}>뒤로 보내기</button>
+        <button onClick={handleTop}>맨 앞으로 가져오기</button>
+        <button onClick={handleLast}>맨 뒤로 보내기</button>
       </div>
       <div ref={canvasRef} className='canvas' onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
         {shapes.map((shape) => (
