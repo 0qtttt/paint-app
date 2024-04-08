@@ -104,6 +104,19 @@ function App() {
     setIsMoving(false);
   };
 
+  // 캔버스 모두 삭제
+  const clearCanvas = () => {
+    setShapes([]);
+    setSelectedShape(null);
+  };
+
+  // 선택된 도형 삭제
+  const handleDelete = () => {
+    if (!selectedShape) return;
+    setShapes(shapes.filter((d) => d.id !== selectedShape.id));
+    setSelectedShape(null);
+  };
+
   return (
     <div
       style={{
@@ -120,6 +133,8 @@ function App() {
         <button onClick={() => changeDrawMode('circle')} className={drawMode === 'circle' ? 'active' : ''}>
           원 그리기
         </button>
+        <button onClick={handleDelete}>선택 삭제</button>
+        <button onClick={clearCanvas}>캔버스 지우기</button>
       </div>
       <div ref={canvasRef} className='canvas' onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
         {shapes.map((shape) => (
