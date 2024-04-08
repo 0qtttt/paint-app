@@ -1,95 +1,125 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+import { useId, useState } from 'react';
+interface Shape {
+  id: string;
+  type: 'rectangle' | 'circle';
+  startX: number;
+  startY: number;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
 
-export default function Home() {
+function App() {
+  const [shapes, setShapes] = useState<Shape[]>([]); // 도형 Array
+  const [newShape, setNewShape] = useState<Shape | null>(null); // 새로운 도형
+  const [isDrawing, setIsDrawing] = useState<boolean>(false); // 그리는 중
+  const [drawMode, setDrawMode] = useState<'rectangle' | 'circle'>('rectangle'); // 도형 타입
+  const id = useId(); // id 생성
+
+  // 마우스클릭 시점의 좌표를 새로운 도형 객체로 만든다.
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const { offsetX, offsetY } = e.nativeEvent;
+    setIsDrawing(true);
+    setNewShape({
+      id: id + shapes.length,
+      type: drawMode,
+      startX: offsetX,
+      startY: offsetY,
+      left: offsetX,
+      top: offsetY,
+      width: 0,
+      height: 0,
+    });
+  };
+
+  // 마우스를 움직이는 동안 새로운 도형 객체를 업데이트 한다.
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    if (!isDrawing || !newShape) return;
+    const { offsetX, offsetY } = e.nativeEvent;
+
+    const width = offsetX - newShape.startX;
+    const height = offsetY - newShape.startY;
+    const temp = {
+      ...newShape,
+      left: width > 0 ? newShape.startX : offsetX,
+      top: height > 0 ? newShape.startY : offsetY,
+      width: Math.abs(width),
+      height: Math.abs(height),
+    };
+    setNewShape(temp);
+  };
+
+  // 마우스 클릭을 떼면 새로운 도형 객체를 기존 도형 Array로 추가한다.
+  const handleMouseUp = () => {
+    setIsDrawing(false);
+
+    if (!newShape || newShape.width < 1 || newShape.height < 1) {
+      setNewShape(null);
+      return false;
+    }
+
+    setShapes([...shapes, newShape]);
+    setNewShape(null);
+  };
+
+  // 도형 타입을 변경한다.
+  const changeDrawMode = (mode: 'rectangle' | 'circle') => {
+    setDrawMode(mode);
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+      }}
+    >
+      <h1>도형 그림판</h1>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={() => changeDrawMode('rectangle')} className={drawMode === 'rectangle' ? 'active' : ''}>
+          사각형 그리기
+        </button>
+        <button onClick={() => changeDrawMode('circle')} className={drawMode === 'circle' ? 'active' : ''}>
+          원 그리기
+        </button>
       </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+      <div className='canvas' onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
+        {shapes.map((shape) => (
+          <div
+            key={shape.id}
+            className={shape.type}
+            style={{
+              position: 'absolute',
+              left: shape.left + 'px',
+              top: shape.top + 'px',
+              width: shape.width + 'px',
+              height: shape.height + 'px',
+              borderRadius: shape.type === 'rectangle' ? 0 : '50%',
+              border: '1px solid black',
+              cursor: 'pointer',
+            }}
+          ></div>
+        ))}
+        {newShape && (
+          <div
+            className={newShape.type}
+            style={{
+              position: 'absolute',
+              left: newShape.left + 'px',
+              top: newShape.top + 'px',
+              width: newShape.width + 'px',
+              height: newShape.height + 'px',
+              borderRadius: newShape.type === 'rectangle' ? 0 : '50%',
+              border: '1px solid black',
+            }}
+          ></div>
+        )}
       </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </div>
   );
 }
+
+export default App;
