@@ -18,6 +18,8 @@ function App() {
   const [drawMode, setDrawMode] = useState<'rectangle' | 'circle'>('rectangle'); // 도형 타입
   const id = useId(); // id 생성
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [selectedShape, setSelectedShape] = useState<Shape | null>(null);
+  const [isMoving, setIsMoving] = useState<boolean>(false);
 
   // MouseEvent의 e.nativeEvent 에서 offset 값을 가져올 경우 좌표가 정확하지 않는 이슈가 있어서 ref로 다시 계산
   const getOffset = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -69,6 +71,7 @@ function App() {
   const handleMouseUp = () => {
     setIsDrawing(false);
 
+    // 새로운 객체 생성시에 width, height 이 0일때 점으로 도형 생성 방지
     if (!newShape || newShape.width < 1 || newShape.height < 1) {
       setNewShape(null);
       return false;
@@ -81,6 +84,12 @@ function App() {
   // 도형 타입을 변경한다.
   const changeDrawMode = (mode: 'rectangle' | 'circle') => {
     setDrawMode(mode);
+  };
+
+  // 도형 클릭해서 선택 기능
+  const handleSelectedMouseDown = (shape: Shape) => {
+    setSelectedShape(shape);
+    setIsMoving(true);
   };
 
   return (
@@ -104,7 +113,11 @@ function App() {
         {shapes.map((shape) => (
           <div
             key={shape.id}
-            className={shape.type}
+            className={shape.type + (selectedShape?.id === shape.id ? ' selected' : '')}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              handleSelectedMouseDown(shape);
+            }}
             style={{
               position: 'absolute',
               left: shape.left + 'px',
