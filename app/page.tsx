@@ -1,5 +1,6 @@
 'use client';
-import { useId, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useId, useRef, useState } from 'react';
 interface Shape {
   id: string;
   type: 'rectangle' | 'circle';
@@ -11,8 +12,20 @@ interface Shape {
   height: number;
 }
 
+// url QueryString 에 값 셋팅 (base64 encoded)
+const handleSetQuery = (data: Shape[]): string => {
+  return data && btoa(encodeURIComponent(JSON.stringify(data)));
+};
+
+// url QueryString 으로 부터 값 가져오기 (base64 decode)
+const handleGetQuery = (str: string): Shape[] => {
+  return str && JSON.parse(decodeURIComponent(atob(str)));
+};
+
 function App() {
-  const [shapes, setShapes] = useState<Shape[]>([]); // 도형 Array
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [shapes, setShapes] = useState<Shape[]>(handleGetQuery(searchParams.get('data') as string) || []);
   const [newShape, setNewShape] = useState<Shape | null>(null); // 새로운 도형
   const [isDrawing, setIsDrawing] = useState<boolean>(false); // 그리는 중
   const [drawMode, setDrawMode] = useState<'rectangle' | 'circle'>('rectangle'); // 도형 타입
@@ -149,6 +162,11 @@ function App() {
     if (!itemToMove) return;
     setShapes([itemToMove, ...filteredItems]);
   };
+
+  // 도형이 변경될 때 마다 url QueryString 으로 저장
+  useEffect(() => {
+    router.push(`?data=${handleSetQuery(shapes)}`);
+  }, [router, shapes]);
 
   return (
     <div
