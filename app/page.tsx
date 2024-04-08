@@ -92,6 +92,18 @@ function App() {
     setIsMoving(true);
   };
 
+  // 도형 선택 후 해당 좌표값 업데이트
+  const handleSelectedMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    if (!isMoving || !selectedShape) return;
+    const { offsetX, offsetY } = getOffset(e);
+    setShapes(shapes.map((d) => (d.id === selectedShape?.id ? { ...d, left: offsetX - d.width / 2, top: offsetY - d.height / 2 } : d)));
+  };
+
+  // 도형 이동 종료
+  const handleSelectedMouseUp = () => {
+    setIsMoving(false);
+  };
+
   return (
     <div
       style={{
@@ -118,6 +130,8 @@ function App() {
               e.stopPropagation();
               handleSelectedMouseDown(shape);
             }}
+            onMouseMove={handleSelectedMouseMove}
+            onMouseUp={handleSelectedMouseUp}
             style={{
               position: 'absolute',
               left: shape.left + 'px',
