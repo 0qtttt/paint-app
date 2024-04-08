@@ -1,5 +1,5 @@
 'use client';
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 interface Shape {
   id: string;
   type: 'rectangle' | 'circle';
@@ -17,10 +17,24 @@ function App() {
   const [isDrawing, setIsDrawing] = useState<boolean>(false); // 그리는 중
   const [drawMode, setDrawMode] = useState<'rectangle' | 'circle'>('rectangle'); // 도형 타입
   const id = useId(); // id 생성
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  // MouseEvent의 e.nativeEvent 에서 offset 값을 가져올 경우 좌표가 정확하지 않는 이슈가 있어서 ref로 다시 계산
+  const getOffset = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { offsetX: 0, offsetY: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+    return {
+      offsetX,
+      offsetY,
+    };
+  };
 
   // 마우스클릭 시점의 좌표를 새로운 도형 객체로 만든다.
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    const { offsetX, offsetY } = e.nativeEvent;
+    const { offsetX, offsetY } = getOffset(e);
     setIsDrawing(true);
     setNewShape({
       id: id + shapes.length,
@@ -37,7 +51,7 @@ function App() {
   // 마우스를 움직이는 동안 새로운 도형 객체를 업데이트 한다.
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (!isDrawing || !newShape) return;
-    const { offsetX, offsetY } = e.nativeEvent;
+    const { offsetX, offsetY } = getOffset(e);
 
     const width = offsetX - newShape.startX;
     const height = offsetY - newShape.startY;
@@ -86,7 +100,7 @@ function App() {
           원 그리기
         </button>
       </div>
-      <div className='canvas' onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
+      <div ref={canvasRef} className='canvas' onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
         {shapes.map((shape) => (
           <div
             key={shape.id}
